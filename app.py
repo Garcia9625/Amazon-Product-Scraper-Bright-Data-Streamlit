@@ -7,7 +7,7 @@ import re
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-st.title("Amazon ASIN Scraper")
+st.title("Amazon Products Scraper by ASIN")
 
 uploaded_file = st.file_uploader("Upload Excel file with ASINs", type=["xlsx"])
 api_key = st.text_input("Enter Bright Data API Key", type="password")
@@ -19,11 +19,11 @@ if uploaded_file and api_key:
         st.error(f"❌ Failed to read Excel file: {e}")
         st.stop()
 
-    if "asin" not in input_df.columns.str.lower().tolist():
-        st.error("❌ The uploaded Excel must contain a column named 'asin'.")
+    if "asin" not in input_df.columns.str.lower():
+        st.error("❌ Excel file must contain a column named 'asin'")
         st.stop()
 
-    asin_column = input_df[[col for col in input_df.columns if col.lower() == "asin"][0]]
+    asin_column = input_df.loc[:, input_df.columns.str.lower() == "asin"].squeeze()
     asins_raw = asin_column.dropna().astype(str).unique().tolist()
 
     valid_asins = []
@@ -35,6 +35,7 @@ if uploaded_file and api_key:
     st.write(f"Loaded {len(valid_asins)} valid ASINs")
 
     request_count = 0
+    start_time = time.time()
 
     def fetch_html(target_url):
         global request_count
@@ -112,29 +113,30 @@ if uploaded_file and api_key:
 
         return [name, asin, rating, price, url, len(image_urls), review_count, breadcrumbs, bsr, make_sure_fits]
 
-    start_time = time.time()
-
-    progress_bar = st.progress(0)
-    status_text = st.empty()
+    progress = st.progress(0)
+    status = st.empty()
 
     with st.spinner("Scraping products..."):
         data_rows = []
+        total = len(valid_asins)
         with ThreadPoolExecutor(max_workers=10) as executor:
-            futures = {executor.submit(extract_product, asin): asin for asin in valid_asins}
-            for i, future in enumerate(as_completed(futures)):
-                data_rows.append(future.result())
-                progress_bar.progress((i + 1) / len(valid_asins))
-                status_text.text(f"Scraped {i + 1}/{len(valid_asins)} products")
+            futures = [executor.submit(extract_product, asin) for asin in valid_asins]
+            for i, f in enumerate(as_completed(futures), 1):
+                data_rows.append(f.result())
+                progress.progress(i / total)
+                status.write(f"Scraped {i}/{total} products")
 
         output_df = pd.DataFrame(data_rows, columns=[
             "Name", "ASIN", "Rating", "Price", "ProductURL",
             "ImageCount", "ReviewCount", "Breadcrumbs", "BestSellerRank", "MakeSureFits"])
 
-    duration_sec = round(time.time() - start_time, 2)
-    duration_min = round(duration_sec / 60, 2)
+        total_time = time.time() - start_time
+        minutes = total_time / 60
+        st.success(f"✅ Done! Scraped {len(output_df)} products using {request_count} requests in {minutes:.2f} minutes ({total_time:.1f} seconds).")
+        st.dataframe(output_df)
 
-    st.success(f"✅ Done! Scraped {len(output_df)} products using {request_count} requests in {duration_min} minutes ({duration_sec} seconds).")
-    st.dataframe(output_df)
+        csv_data = output_df.to_csv(index=False).encode("utf-8")
+        st.download_button("Download CSV", data=csv_data, file_name="products_scraped.csv", mime="text/csv")
 
-    csv_data = output_df.to_csv(index=False).encode("utf-8")
-    st.download_button("Download CSV", data=csv_data, file_name="products_scraped.csv", mime="text/csv")
+        # Reset uploader
+        uploaded_file = None
