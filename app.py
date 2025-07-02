@@ -8,9 +8,9 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 
 st.title("Amazon Products Scraper by ASIN")
 
-uploaded_file = st.file_uploader("Upload Excel file with ASINs.", type=["xlsx"])
-st.warning("⚠️ Make sure your API key is active before scraping.")
-api_key = st.text_input("Enter Bright Data API Key", type="password")
+uploaded_file = st.file_uploader("Upload Excel file with ASINs.(⚠️ the column must be called ‘Asin’.)", type=["xlsx"])
+
+api_key = st.text_input("Enter Bright Data API Key (⚠️ Make sure your API key is active before scraping.)", type="password")
 
 def get_brightdata_credits(api_key):
     try:
