@@ -23,14 +23,17 @@ This tool uses the [Bright Data API](https://brightdata.com) and a friendly Stre
    git clone https://github.com/YOUR_USERNAME/YOUR_REPO_NAME.git
    cd YOUR_REPO_NAME
 Install dependencies:
+
 bash
+Copy
+Edit
 pip install -r requirements.txt
-
-
 Run the Streamlit app:
-bash
-streamlit run app.py
 
+bash
+Copy
+Edit
+streamlit run app.py
 📁 Input Format
 Upload a .xlsx Excel file with a column named asin (case-insensitive):
 
@@ -57,5 +60,22 @@ Name	ASIN	Rating	Price	ProductURL	ImageCount	ReviewCount	Breadcrumbs	BestSellerR
 
 📝 License
 MIT License. Use freely and responsibly.
+
+yaml
+Copy
+Edit
+
+---
+
+Let me know if you'd like help:
+- Adding a real screenshot or preview image
+- Deploying to Streamlit Cloud
+- Or converting this into a Spanish version too
+
+
+
+
+
+
 
 
