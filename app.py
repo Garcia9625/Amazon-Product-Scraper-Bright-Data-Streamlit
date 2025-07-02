@@ -138,7 +138,7 @@ if uploaded_file and api_key:
         with st.spinner("Scraping products..."):
             data_rows = []
             total = len(valid_asins)
-            with ThreadPoolExecutor(max_workers=10) as executor:
+            with ThreadPoolExecutor(max_workers=15) as executor:
                 futures = [executor.submit(extract_product, asin) for asin in valid_asins]
                 for i, f in enumerate(as_completed(futures), 1):
                     data_rows.append(f.result())
